@@ -1,164 +1,112 @@
-:root {
-  --font-mono: 'Roboto Mono', monospace;
-}
+@import 'tailwindcss';
 
-* {
-  box-sizing: border-box;
-}
+@theme {
+  --color-purple-900: #6b4a8b;
+  --color-purple-800: #5a3d75;
+  --color-rose-400: #c9a9a6;
+  --color-rose-500: #b89693;
+  --color-stone-50: #f7f5f9;
+  --color-stone-100: #ebe7f0;
+  --color-ink: #2c2c2c;
 
-html {
-  font-size: 18px;
-  line-height: 32px;
-
-  background: rgb(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
-}
-
-html,
-body,
-#app {
-  height: 100%;
+  --font-serif: var(--font-cormorant), serif;
+  --font-sans: var(--font-inter), sans-serif;
 }
 
 body {
-  font-family: system-ui;
-  font-size: 18px;
-  line-height: 32px;
+  background-color: var(--color-stone-50);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
 
-  margin: 0;
-  color: rgb(1000, 1000, 1000);
+.text-balance {
+  text-wrap: balance;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 15px;
-    line-height: 24px;
+.img-offset-right {
+  transform: translate(10%, 10%);
+}
+
+@media (max-width: 768px) {
+  .img-offset-right {
+    transform: translate(0, 0);
   }
 }
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-rose-400);
+  box-shadow: 0 0 0 1px var(--color-rose-400);
 }
 
-h1 {
-  margin: 40px 0;
-  font-size: 64px;
-  line-height: 70px;
-  font-weight: bold;
-
-  @media (max-width: 1024px) {
-    margin: 24px 0;
-    font-size: 42px;
-    line-height: 42px;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 38px;
-    line-height: 38px;
-  }
-
-  @media (max-width: 400px) {
-    font-size: 32px;
-    line-height: 32px;
-  }
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-stone-50);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rose-400);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-purple-900);
 }
 
-p {
-  margin: 24px 0;
-
-  @media (max-width: 1024px) {
-    margin: calc(var(--base) * 0.75) 0;
-  }
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 40px -15px rgba(107, 74, 139, 0.1);
 }
 
-a {
-  color: currentColor;
-
-  &:focus {
-    opacity: 0.8;
-    outline: none;
-  }
-
-  &:active {
-    opacity: 0.7;
-    outline: none;
-  }
-}
-
-svg {
-  vertical-align: middle;
-}
-
-.home {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  height: 100vh;
-  padding: 45px;
-  max-width: 1024px;
-  margin: 0 auto;
+.img-hover-container {
   overflow: hidden;
+}
+.img-hover-container img {
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.img-hover-container:hover img {
+  transform: scale(1.05);
+}
 
-  @media (max-width: 400px) {
-    padding: 24px;
+.map-filter {
+  filter: grayscale(100%) contrast(90%) opacity(80%);
+  transition: filter 0.5s ease;
+}
+.map-filter:hover {
+  filter: grayscale(40%) contrast(100%) opacity(100%);
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
   }
-
-  .content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-grow: 1;
-
-    h1 {
-      text-align: center;
-    }
+  50% {
+    transform: translateY(-10px);
   }
-
-  .links {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    a {
-      text-decoration: none;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .admin {
-      color: rgb(0, 0, 0);
-      background: rgb(1000, 1000, 1000);
-      border: 1px solid rgb(0, 0, 0);
-    }
-
-    .docs {
-      color: rgb(1000, 1000, 1000);
-      background: rgb(0, 0, 0);
-      border: 1px solid rgb(1000, 1000, 1000);
-    }
+  100% {
+    transform: translateY(0px);
   }
+}
 
-  .footer {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
 
-    @media (max-width: 1024px) {
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    p {
-      margin: 0;
-    }
-
-    .codeLink {
-      text-decoration: none;
-      padding: 0 0.5rem;
-      background: rgb(60, 60, 60);
-      border-radius: 4px;
-    }
+@keyframes scroll-down {
+  0% {
+    transform: translateY(-100%);
   }
+  100% {
+    transform: translateY(200%);
+  }
+}
+
+.animate-scroll-down {
+  animation: scroll-down 2s ease-in-out infinite;
 }

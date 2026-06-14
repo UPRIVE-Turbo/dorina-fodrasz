@@ -1,0 +1,40 @@
+{
+  "project": {
+    "name": "Dorina Fodrász",
+    "slug": "dorina-fodrasz",
+    "language": "hu"
+  },
+  "business": {
+    "name": "Dorina Fodrász",
+    "industry": "Fodrászat",
+    "city": "Miskolc",
+    "tier": "Tier 1",
+    "contact": {
+      "phone": "+36 70 328 0824",
+      "email": null,
+      "address": null,
+      "facebook": "https://www.facebook.com/dorinafodraszmiskolc",
+      "instagram": "https://www.instagram.com/tdorinaa"
+    }
+  },
+  "design": {
+    "colors": {
+      "primary": "#6B4A8B",
+      "background": "#F7F5F9"
+    },
+    "fonts": {
+      "heading": "Cormorant Garamond",
+      "body": "Inter"
+    }
+  },
+  "sections": [
+    "hero",
+    "services",
+    "about",
+    "gallery",
+    "booking-form",
+    "contact",
+    "footer"
+  ],
+  "full_prompt": "Készíts egy magyar nyelvű, egyoldalas landing page-et egy fodrász szalonnak:\n\nAZ ÜZLET ADATAI:\n- Név: Dorina Fodrász\n- Helyszín: Miskolc (Széchenyi utca környéke — pontosítandó)\n- Telefon: +36 70 328 0824\n- Facebook: facebook.com/dorinafodraszmiskolc | Instagram: @tdorinaa | TikTok\n- Szolgáltatások: Női és férfi hajvágás, festés, balayage, melír, styling\n\nDESIGN:\n- Stílus: Modern, divatos, nőies\n- Színek: Mély lila (#6B4A8B) fejlécekhez, rozé arany (#C9A9A6) kiemelésekhez, törtfehér (#F7F5F9) háttérhez, sötétszürke (#2C2C2C) szöveghez\n- Betűtípus: Elegáns serif címekhez (pl. Cormorant Garamond), sans-serif szöveghez (pl. Inter)\n\nFELÉPÍTÉS (egyetlen görgethető oldal):\n1. Hero szekció: \"Dorina Fodrász — Miskolc\", szlogen (\"Stílus és gondoskodás minden vendégnek\"), CTA: \"Időpontfoglalás\"\n2. Szolgáltatások: Női/férfi hajvágás, festés, balayage, melír, styling — rövid leírással, tájékoztató árakkal\n3. Rólunk: Dorina bemutatkozása, tapasztalat, stílus\n4. Galéria: 6-8 kép placeholder (munkák, előtte/utána)\n5. Időpontfoglalás űrlap: Név, telefon, kívánt szolgáltatás (legördülő), kívánt időpont, megjegyzés (a Messenger-es foglalás kiváltására)\n6. Elérhetőség: Telefon, cím, nyitvatartás, Google Maps\n7. Lábléc: Facebook, Instagram, telefon, © 2026\n\nHANGNEM: Barátságos, divatos, professzionális. Tegező.\n\nTECHNIKAI: Mobilbarát, reszponzív. Telefonszám kattintható."
+}
