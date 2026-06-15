@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     services: Service;
     gallery: Gallery;
+    testimonials: Testimonial;
     submissions: Submission;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -83,6 +84,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     gallery: GallerySelect<false> | GallerySelect<true>;
+    testimonials: TestimonialsSelect<false> | TestimonialsSelect<true>;
     submissions: SubmissionsSelect<false> | SubmissionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -95,9 +97,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     settings: Setting;
+    homepage: Homepage;
   };
   globalsSelect: {
     settings: SettingsSelect<false> | SettingsSelect<true>;
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -177,18 +181,21 @@ export interface Media {
  */
 export interface Service {
   id: number;
+  _order?: string | null;
   name: string;
   description?: string | null;
   /**
    * pl. "6.000 Ft-tól"
    */
   price?: string | null;
+  /**
+   * A szolgáltatás melyik oszlopban jelenjen meg az árlistában.
+   */
   category?: ('hajvagas' | 'szinvaltoztatas') | null;
   /**
    * Opcionális ikon azonosító
    */
   icon?: string | null;
-  order?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -198,9 +205,32 @@ export interface Service {
  */
 export interface Gallery {
   id: number;
+  _order?: string | null;
   image: number | Media;
+  /**
+   * Rövid leírás a képről (akadálymentesség és SEO miatt).
+   */
   alt: string;
-  order?: number | null;
+  /**
+   * A galéria rácsban elfoglalt hely mérete.
+   */
+  size?: ('normal' | 'tall' | 'wide') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials".
+ */
+export interface Testimonial {
+  id: number;
+  _order?: string | null;
+  quote: string;
+  /**
+   * Opcionális — pl. "Anna K."
+   */
+  name?: string | null;
+  rating?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -260,6 +290,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'gallery';
         value: number | Gallery;
+      } | null)
+    | ({
+        relationTo: 'testimonials';
+        value: number | Testimonial;
       } | null)
     | ({
         relationTo: 'submissions';
@@ -352,12 +386,12 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "services_select".
  */
 export interface ServicesSelect<T extends boolean = true> {
+  _order?: T;
   name?: T;
   description?: T;
   price?: T;
   category?: T;
   icon?: T;
-  order?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -366,9 +400,22 @@ export interface ServicesSelect<T extends boolean = true> {
  * via the `definition` "gallery_select".
  */
 export interface GallerySelect<T extends boolean = true> {
+  _order?: T;
   image?: T;
   alt?: T;
-  order?: T;
+  size?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "testimonials_select".
+ */
+export interface TestimonialsSelect<T extends boolean = true> {
+  _order?: T;
+  quote?: T;
+  name?: T;
+  rating?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -433,9 +480,16 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Setting {
   id: number;
   companyName?: string | null;
+  /**
+   * Kattintható telefonszám a weboldalon (tel: link).
+   */
   phone?: string | null;
   email?: string | null;
   address?: string | null;
+  /**
+   * A cím alatt megjelenő kiegészítő szöveg.
+   */
+  addressNote?: string | null;
   openingHours?:
     | {
         day?: string | null;
@@ -443,8 +497,81 @@ export interface Setting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * A Google Maps "Embed a map" iframe src URL-je.
+   */
+  mapEmbedUrl?: string | null;
   facebook?: string | null;
   instagram?: string | null;
+  /**
+   * Opcionális — ha üres, a TikTok ikon nem jelenik meg.
+   */
+  tiktok?: string | null;
+  /**
+   * A böngésző fülön és a Google találatokban megjelenő cím.
+   */
+  seoTitle?: string | null;
+  /**
+   * A Google találatokban megjelenő rövid leírás.
+   */
+  seoDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  heroBadge?: string | null;
+  heroTitleLine1?: string | null;
+  /**
+   * Ez a szó dőlt, rozé színnel jelenik meg.
+   */
+  heroTitleHighlight?: string | null;
+  heroTitleLine3?: string | null;
+  heroSubtitle?: string | null;
+  heroCtaLabel?: string | null;
+  heroPhoneLabel?: string | null;
+  heroImage?: (number | null) | Media;
+  heroImageAlt?: string | null;
+  aboutTitle?: string | null;
+  aboutSubtitle?: string | null;
+  aboutParagraphs?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  aboutQuote?: string | null;
+  aboutImage1?: (number | null) | Media;
+  aboutImage1Alt?: string | null;
+  aboutImage2?: (number | null) | Media;
+  aboutImage2Alt?: string | null;
+  servicesEyebrow?: string | null;
+  servicesTitle?: string | null;
+  servicesDescription?: string | null;
+  servicesColumn1Title?: string | null;
+  servicesColumn2Title?: string | null;
+  galleryTitle?: string | null;
+  galleryDescription?: string | null;
+  galleryCtaText?: string | null;
+  bookingTitleLine1?: string | null;
+  bookingTitleHighlight?: string | null;
+  bookingDescription?: string | null;
+  bookingFeatures?:
+    | {
+        icon?: ('clock' | 'chat' | 'star' | 'heart') | null;
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  contactTitle?: string | null;
+  footerTagline?: string | null;
+  footerCopyright?: string | null;
+  footerDisclaimer?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -457,6 +584,7 @@ export interface SettingsSelect<T extends boolean = true> {
   phone?: T;
   email?: T;
   address?: T;
+  addressNote?: T;
   openingHours?:
     | T
     | {
@@ -464,8 +592,66 @@ export interface SettingsSelect<T extends boolean = true> {
         hours?: T;
         id?: T;
       };
+  mapEmbedUrl?: T;
   facebook?: T;
   instagram?: T;
+  tiktok?: T;
+  seoTitle?: T;
+  seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  heroBadge?: T;
+  heroTitleLine1?: T;
+  heroTitleHighlight?: T;
+  heroTitleLine3?: T;
+  heroSubtitle?: T;
+  heroCtaLabel?: T;
+  heroPhoneLabel?: T;
+  heroImage?: T;
+  heroImageAlt?: T;
+  aboutTitle?: T;
+  aboutSubtitle?: T;
+  aboutParagraphs?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  aboutQuote?: T;
+  aboutImage1?: T;
+  aboutImage1Alt?: T;
+  aboutImage2?: T;
+  aboutImage2Alt?: T;
+  servicesEyebrow?: T;
+  servicesTitle?: T;
+  servicesDescription?: T;
+  servicesColumn1Title?: T;
+  servicesColumn2Title?: T;
+  galleryTitle?: T;
+  galleryDescription?: T;
+  galleryCtaText?: T;
+  bookingTitleLine1?: T;
+  bookingTitleHighlight?: T;
+  bookingDescription?: T;
+  bookingFeatures?:
+    | T
+    | {
+        icon?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  contactTitle?: T;
+  footerTagline?: T;
+  footerCopyright?: T;
+  footerDisclaimer?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

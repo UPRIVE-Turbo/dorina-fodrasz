@@ -2,14 +2,19 @@ import type { CollectionConfig } from 'payload'
 
 export const Services: CollectionConfig = {
   slug: 'services',
+  labels: {
+    singular: 'Szolgáltatás',
+    plural: 'Szolgáltatások',
+  },
   admin: {
+    group: 'Tartalom',
     useAsTitle: 'name',
-    defaultColumns: ['name', 'price', 'order'],
+    defaultColumns: ['name', 'price', 'category'],
   },
   access: {
     read: () => true,
   },
-  defaultSort: 'order',
+  orderable: true,
   fields: [
     {
       name: 'name',
@@ -39,6 +44,9 @@ export const Services: CollectionConfig = {
         { label: 'Színváltoztatás', value: 'szinvaltoztatas' },
       ],
       defaultValue: 'hajvagas',
+      admin: {
+        description: 'A szolgáltatás melyik oszlopban jelenjen meg az árlistában.',
+      },
     },
     {
       name: 'icon',
@@ -47,12 +55,6 @@ export const Services: CollectionConfig = {
       admin: {
         description: 'Opcionális ikon azonosító',
       },
-    },
-    {
-      name: 'order',
-      type: 'number',
-      label: 'Sorrend',
-      defaultValue: 0,
     },
   ],
 }

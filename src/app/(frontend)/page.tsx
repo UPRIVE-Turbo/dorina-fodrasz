@@ -6,6 +6,7 @@ import {
   Clock,
   FacebookLogo,
   HandPointing,
+  Heart,
   InstagramLogo,
   Phone,
   Star,
@@ -13,40 +14,10 @@ import {
 } from '@phosphor-icons/react/dist/ssr'
 
 import config from '@/payload.config'
+import type { Media } from '@/payload-types'
 import Reveal from './components/Reveal'
 import SiteHeader from './components/SiteHeader'
 import BookingForm from './components/BookingForm'
-
-const galleryImages = [
-  {
-    src: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80',
-    alt: 'Frizura formázása hajszárítóval a szalonban',
-    className: 'col-span-2 md:col-span-1 md:row-span-2 aspect-square md:aspect-auto',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?auto=format&fit=crop&w=600&q=80',
-    alt: 'Hajformázó eszközök közelről',
-    className: 'aspect-square',
-    delay: 100 as const,
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1503104834685-7205e8607eb9?auto=format&fit=crop&w=600&q=80',
-    alt: 'Hosszú, egészséges, ápolt haj',
-    className: 'aspect-square',
-    delay: 200 as const,
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=600&q=80',
-    alt: 'Természetes, dús hajkorona',
-    className: 'aspect-square',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1605980776566-0486c3ac7617?auto=format&fit=crop&w=800&q=80',
-    alt: 'Modern férfi hajvágás',
-    className: 'col-span-2 aspect-[2/1] md:aspect-auto md:h-full',
-    delay: 100 as const,
-  },
-]
 
 const fallbackServices = [
   {
@@ -101,6 +72,64 @@ const fallbackServices = [
   },
 ]
 
+const fallbackGallery = [
+  {
+    id: 'gallery-1',
+    src: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80',
+    alt: 'Frizura formázása hajszárítóval a szalonban',
+    size: 'tall' as const,
+  },
+  {
+    id: 'gallery-2',
+    src: 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?auto=format&fit=crop&w=600&q=80',
+    alt: 'Hajformázó eszközök közelről',
+    size: 'normal' as const,
+    delay: 100 as const,
+  },
+  {
+    id: 'gallery-3',
+    src: 'https://images.unsplash.com/photo-1503104834685-7205e8607eb9?auto=format&fit=crop&w=600&q=80',
+    alt: 'Hosszú, egészséges, ápolt haj',
+    size: 'normal' as const,
+    delay: 200 as const,
+  },
+  {
+    id: 'gallery-4',
+    src: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=600&q=80',
+    alt: 'Természetes, dús hajkorona',
+    size: 'normal' as const,
+  },
+  {
+    id: 'gallery-5',
+    src: 'https://images.unsplash.com/photo-1605980776566-0486c3ac7617?auto=format&fit=crop&w=800&q=80',
+    alt: 'Modern férfi hajvágás',
+    size: 'wide' as const,
+    delay: 100 as const,
+  },
+]
+
+const galleryClassNames: Record<string, string> = {
+  normal: 'aspect-square',
+  tall: 'col-span-2 md:col-span-1 md:row-span-2 aspect-square md:aspect-auto',
+  wide: 'col-span-2 aspect-[2/1] md:aspect-auto md:h-full',
+}
+
+const galleryDelays: Array<100 | 200 | undefined> = [undefined, 100, 200, undefined, 100]
+
+const bookingIcons = {
+  clock: Clock,
+  chat: ChatCircleText,
+  star: Star,
+  heart: Heart,
+} as const
+
+function mediaUrl(media: number | Media | null | undefined, fallback: string): string {
+  if (media && typeof media === 'object' && media.url) {
+    return media.url
+  }
+  return fallback
+}
+
 export const revalidate = 60
 
 export default async function HomePage() {
@@ -108,8 +137,15 @@ export default async function HomePage() {
   const payload = await getPayload({ config: payloadConfig })
 
   const settings = await payload.findGlobal({ slug: 'settings' }).catch(() => null)
+  const homepage = await payload.findGlobal({ slug: 'homepage' }).catch(() => null)
   const servicesResult = await payload
-    .find({ collection: 'services', limit: 50, sort: 'order' })
+    .find({ collection: 'services', limit: 50, sort: '_order' })
+    .catch(() => null)
+  const galleryResult = await payload
+    .find({ collection: 'gallery', limit: 20, sort: '_order' })
+    .catch(() => null)
+  const testimonialsResult = await payload
+    .find({ collection: 'testimonials', limit: 1, sort: '_order' })
     .catch(() => null)
 
   const services = servicesResult?.docs?.length ? servicesResult.docs : fallbackServices
@@ -118,7 +154,12 @@ export default async function HomePage() {
   const phoneHref = `tel:${phone.replace(/\s+/g, '')}`
   const facebook = settings?.facebook || 'https://www.facebook.com/dorinafodraszmiskolc'
   const instagram = settings?.instagram || 'https://www.instagram.com/tdorinaa'
+  const tiktok = settings?.tiktok
   const address = settings?.address || 'Miskolc, Széchenyi István utca környéke'
+  const addressNote = settings?.addressNote || '(Pontos cím bejelentkezés alapján)'
+  const mapEmbedUrl =
+    settings?.mapEmbedUrl ||
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2685.2534578135896!2d20.7818!3d48.1035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47409e6fcf2d9c0b%3A0x6ec0c5b550275815!2sMiskolc%2C%20Sz%C3%A9chenyi%20Istv%C3%A1n%20%C3%BAt!5e0!3m2!1shu!2shu!4v1700000000000!5m2!1shu!2shu'
   const openingHours = settings?.openingHours?.length
     ? settings.openingHours
     : [
@@ -129,6 +170,107 @@ export default async function HomePage() {
 
   const hajvagasServices = services.filter((s) => s.category === 'hajvagas' || !s.category)
   const szinServices = services.filter((s) => s.category === 'szinvaltoztatas')
+
+  const gallery = galleryResult?.docs?.length
+    ? galleryResult.docs.map((doc) => ({
+        id: String(doc.id),
+        src: mediaUrl(doc.image, fallbackGallery[0].src),
+        alt: doc.alt,
+        size: doc.size || 'normal',
+      }))
+    : fallbackGallery
+
+  const testimonial = testimonialsResult?.docs?.[0] || {
+    quote: 'Precíz munka, gyönyörű lett a balayage-om.',
+    name: null,
+    rating: 5,
+  }
+
+  // Hero
+  const heroBadge = homepage?.heroBadge || 'Miskolc, Széchenyi u. környéke'
+  const heroTitleLine1 = homepage?.heroTitleLine1 || 'Stílus és'
+  const heroTitleHighlight = homepage?.heroTitleHighlight || 'gondoskodás'
+  const heroTitleLine3 = homepage?.heroTitleLine3 || 'minden vendégnek.'
+  const heroSubtitle =
+    homepage?.heroSubtitle ||
+    'Személyre szabott hajvágás, precíz festési technikák és professzionális styling. Mert a tökéletes frizura nem csak külső, hanem érzés.'
+  const heroCtaLabel = homepage?.heroCtaLabel || 'Időpontfoglalás'
+  const heroPhoneLabel = homepage?.heroPhoneLabel || 'Hívj minket'
+  const heroImageUrl = mediaUrl(
+    homepage?.heroImage,
+    'https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?auto=format&fit=crop&w=1000&q=80',
+  )
+  const heroImageAlt = homepage?.heroImageAlt || 'Modern női frizura, gyönyörű haj'
+
+  // About
+  const aboutTitle = homepage?.aboutTitle || 'A szenvedélyem a hivatásom.'
+  const aboutSubtitle = homepage?.aboutSubtitle || 'Szia, Dorina vagyok.'
+  const aboutParagraphs = homepage?.aboutParagraphs?.length
+    ? homepage.aboutParagraphs
+    : [
+        {
+          text: 'Évek óta dolgozom a szépségiparban, és számomra a fodrászat sosem csak hajvágásról szólt. Arról szól, hogy amikor belenézel a tükörbe, ne csak a frizurádat lásd, hanem azt az önbizalommal teli nőt vagy férfit, aki valójában vagy.',
+        },
+        {
+          text: 'Folyamatosan képzem magam a legújabb technikákban, legyen szó egy természetes hatású balayage-ról, egy extrém átváltozásról, vagy egy klasszikus, precíz férfi hajvágásról. A munkám során prémium anyagokkal dolgozom, hogy a hajad ne csak szép, de egészséges is maradjon.',
+        },
+      ]
+  const aboutQuote = homepage?.aboutQuote || 'Az egészséges haj a legszebb kiegészítőd.'
+  const aboutImage1Url = mediaUrl(
+    homepage?.aboutImage1,
+    'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80',
+  )
+  const aboutImage1Alt = homepage?.aboutImage1Alt || 'Fodrász munka közben, frizura formázása szárítóval'
+  const aboutImage2Url = mediaUrl(
+    homepage?.aboutImage2,
+    'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80',
+  )
+  const aboutImage2Alt = homepage?.aboutImage2Alt || 'Fodrász szalon eszközök'
+
+  // Services section
+  const servicesEyebrow = homepage?.servicesEyebrow || 'Mit nyújtok?'
+  const servicesTitle = homepage?.servicesTitle || 'Szolgáltatások & Árak'
+  const servicesDescription =
+    homepage?.servicesDescription ||
+    'Minden szolgáltatás tartalmazza a konzultációt, hajmosást és a befejező formázást. Az árak a haj hosszától és sűrűségétől függően változhatnak.'
+  const servicesColumn1Title = homepage?.servicesColumn1Title || 'Hajvágás & Formázás'
+  const servicesColumn2Title = homepage?.servicesColumn2Title || 'Színváltoztatás'
+
+  // Gallery section
+  const galleryTitle = homepage?.galleryTitle || 'Munkáim'
+  const galleryDescription =
+    homepage?.galleryDescription ||
+    'Néhány pillanatkép a szalonból. Még több előtte-utána fotóért kövess Instagramon.'
+  const galleryCtaText = homepage?.galleryCtaText || 'Kövess @tdorinaa néven'
+
+  // Booking section
+  const bookingTitleLine1 = homepage?.bookingTitleLine1 || 'Jelentkezz be'
+  const bookingTitleHighlight = homepage?.bookingTitleHighlight || 'online'
+  const bookingDescription =
+    homepage?.bookingDescription ||
+    'Felejtsd el a hosszadalmas Messenger üzenetváltásokat. Töltsd ki az űrlapot, és hamarosan felhívlak, hogy fixáljuk a pontos időpontot.'
+  const bookingFeatures = homepage?.bookingFeatures?.length
+    ? homepage.bookingFeatures
+    : [
+        {
+          icon: 'clock' as const,
+          title: 'Rugalmas Időpontok',
+          description: 'Próbálok alkalmazkodni az időbeosztásodhoz.',
+        },
+        {
+          icon: 'chat' as const,
+          title: 'Ingyenes Konzultáció',
+          description: 'Minden nagyobb átalakítás előtt megbeszéljük, mi állna a legjobban.',
+        },
+      ]
+
+  // Contact section
+  const contactTitle = homepage?.contactTitle || 'Látogass el hozzám.'
+
+  // Footer
+  const footerTagline = homepage?.footerTagline || 'Miskolc — Széchenyi u. környéke'
+  const footerCopyright = homepage?.footerCopyright || '© 2026 Dorina Fodrász. Minden jog fenntartva.'
+  const footerDisclaimer = homepage?.footerDisclaimer || 'Az árak tájékoztató jellegűek.'
 
   return (
     <>
@@ -142,25 +284,24 @@ export default async function HomePage() {
               <div className="flex items-center gap-4 mb-6">
                 <span className="h-px w-12 bg-rose-400" />
                 <span className="text-xs font-semibold tracking-[0.2em] uppercase text-rose-400">
-                  Miskolc, Széchenyi u. környéke
+                  {heroBadge}
                 </span>
               </div>
             </Reveal>
 
             <Reveal delay={100}>
               <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-serif leading-[1.05] tracking-tight text-purple-900 mb-8 text-balance">
-                Stílus és
+                {heroTitleLine1}
                 <br />
-                <span className="italic text-rose-400">gondoskodás</span>
+                <span className="italic text-rose-400">{heroTitleHighlight}</span>
                 <br />
-                minden vendégnek.
+                {heroTitleLine3}
               </h1>
             </Reveal>
 
             <Reveal delay={200}>
               <p className="text-lg md:text-xl text-ink/70 max-w-lg mb-10 font-light leading-relaxed">
-                Személyre szabott hajvágás, precíz festési technikák és professzionális styling.
-                Mert a tökéletes frizura nem csak külső, hanem érzés.
+                {heroSubtitle}
               </p>
             </Reveal>
 
@@ -170,14 +311,16 @@ export default async function HomePage() {
                   href="#foglalas"
                   className="inline-flex justify-center items-center px-8 py-4 bg-purple-900 text-white text-sm font-medium tracking-wide hover:bg-ink transition-colors duration-300"
                 >
-                  Időpontfoglalás
+                  {heroCtaLabel}
                 </a>
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full border border-rose-400/30 flex items-center justify-center text-rose-400">
                     <Phone size={20} />
                   </div>
                   <div>
-                    <p className="text-xs text-ink/50 uppercase tracking-wider mb-0.5">Hívj minket</p>
+                    <p className="text-xs text-ink/50 uppercase tracking-wider mb-0.5">
+                      {heroPhoneLabel}
+                    </p>
                     <a href={phoneHref} className="font-medium text-ink hover:text-purple-900 transition-colors">
                       {phone}
                     </a>
@@ -192,8 +335,8 @@ export default async function HomePage() {
 
             <div className="relative z-10 w-full aspect-[3/4] img-hover-container img-offset-right shadow-2xl">
               <Image
-                src="https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?auto=format&fit=crop&w=1000&q=80"
-                alt="Modern női frizura, gyönyörű haj"
+                src={heroImageUrl}
+                alt={heroImageAlt}
                 fill
                 sizes="(max-width: 1024px) 100vw, 40vw"
                 className="object-cover object-center grayscale-[20%]"
@@ -202,13 +345,18 @@ export default async function HomePage() {
 
             <div className="absolute -bottom-6 -left-6 md:-left-12 glass-panel p-6 z-20 w-48 animate-float">
               <div className="flex gap-2 text-rose-400 mb-2">
-                {Array.from({ length: 5 }).map((_, i) => (
+                {Array.from({ length: testimonial.rating || 5 }).map((_, i) => (
                   <Star key={i} size={14} weight="fill" />
                 ))}
               </div>
               <p className="text-xs font-medium text-ink leading-tight">
-                &quot;Precíz munka, gyönyörű lett a balayage-om.&quot;
+                &quot;{testimonial.quote}&quot;
               </p>
+              {testimonial.name && (
+                <p className="text-[0.65rem] text-ink/50 mt-2 uppercase tracking-wider">
+                  {testimonial.name}
+                </p>
+              )}
             </div>
           </Reveal>
         </div>
@@ -228,8 +376,8 @@ export default async function HomePage() {
             <Reveal className="relative order-2 lg:order-1">
               <div className="w-4/5 aspect-[4/5] img-hover-container relative">
                 <Image
-                  src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=800&q=80"
-                  alt="Fodrász munka közben, frizura formázása szárítóval"
+                  src={aboutImage1Url}
+                  alt={aboutImage1Alt}
                   fill
                   sizes="(max-width: 1024px) 80vw, 40vw"
                   className="object-cover grayscale-[10%]"
@@ -237,8 +385,8 @@ export default async function HomePage() {
               </div>
               <div className="absolute bottom-12 right-0 w-2/5 aspect-square img-hover-container border-4 border-white shadow-xl">
                 <Image
-                  src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80"
-                  alt="Fodrász szalon eszközök"
+                  src={aboutImage2Url}
+                  alt={aboutImage2Alt}
                   fill
                   sizes="(max-width: 1024px) 40vw, 20vw"
                   className="object-cover"
@@ -247,29 +395,17 @@ export default async function HomePage() {
             </Reveal>
 
             <Reveal delay={100} className="order-1 lg:order-2">
-              <h2 className="text-4xl md:text-5xl font-serif text-purple-900 mb-6">
-                A szenvedélyem a hivatásom.
-              </h2>
-              <h3 className="text-xl text-rose-400 font-serif italic mb-8">Szia, Dorina vagyok.</h3>
+              <h2 className="text-4xl md:text-5xl font-serif text-purple-900 mb-6">{aboutTitle}</h2>
+              <h3 className="text-xl text-rose-400 font-serif italic mb-8">{aboutSubtitle}</h3>
 
               <div className="space-y-6 text-ink/70 font-light leading-relaxed">
-                <p>
-                  Évek óta dolgozom a szépségiparban, és számomra a fodrászat sosem csak hajvágásról
-                  szólt. Arról szól, hogy amikor belenézel a tükörbe, ne csak a frizurádat lásd, hanem
-                  azt az önbizalommal teli nőt vagy férfit, aki valójában vagy.
-                </p>
-                <p>
-                  Folyamatosan képzem magam a legújabb technikákban, legyen szó egy természetes hatású
-                  balayage-ról, egy extrém átváltozásról, vagy egy klasszikus, precíz férfi
-                  hajvágásról. A munkám során prémium anyagokkal dolgozom, hogy a hajad ne csak szép,
-                  de egészséges is maradjon.
-                </p>
+                {aboutParagraphs.map((paragraph, index) => (
+                  <p key={paragraph.id || index}>{paragraph.text}</p>
+                ))}
               </div>
 
               <div className="mt-10 border-l-2 border-rose-400 pl-6 py-2">
-                <p className="text-2xl font-serif text-purple-900 italic">
-                  &quot;Az egészséges haj a legszebb kiegészítőd.&quot;
-                </p>
+                <p className="text-2xl font-serif text-purple-900 italic">&quot;{aboutQuote}&quot;</p>
               </div>
             </Reveal>
           </div>
@@ -286,22 +422,17 @@ export default async function HomePage() {
           <Reveal className="text-center md:text-left mb-16 md:mb-24 flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="max-w-2xl">
               <span className="text-rose-400 font-semibold tracking-[0.2em] uppercase text-xs block mb-4">
-                Mit nyújtok?
+                {servicesEyebrow}
               </span>
-              <h2 className="text-4xl md:text-6xl font-serif text-purple-900 mb-4">
-                Szolgáltatások &amp; Árak
-              </h2>
-              <p className="text-ink/60 font-light">
-                Minden szolgáltatás tartalmazza a konzultációt, hajmosást és a befejező formázást. Az
-                árak a haj hosszától és sűrűségétől függően változhatnak.
-              </p>
+              <h2 className="text-4xl md:text-6xl font-serif text-purple-900 mb-4">{servicesTitle}</h2>
+              <p className="text-ink/60 font-light">{servicesDescription}</p>
             </div>
           </Reveal>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
             <Reveal delay={100}>
               <h3 className="text-2xl font-serif text-purple-900 border-b border-rose-400/30 pb-4 mb-8">
-                Hajvágás &amp; Formázás
+                {servicesColumn1Title}
               </h3>
               <div className="space-y-6">
                 {hajvagasServices.map((service) => (
@@ -325,7 +456,7 @@ export default async function HomePage() {
 
             <Reveal delay={200}>
               <h3 className="text-2xl font-serif text-purple-900 border-b border-rose-400/30 pb-4 mb-8">
-                Színváltoztatás
+                {servicesColumn2Title}
               </h3>
               <div className="space-y-6">
                 {szinServices.map((service) => (
@@ -354,18 +485,16 @@ export default async function HomePage() {
       <section id="galeria" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-serif text-purple-900 mb-4">Munkáim</h2>
-            <p className="text-ink/60 font-light max-w-xl mx-auto">
-              Néhány pillanatkép a szalonból. Még több előtte-utána fotóért kövess Instagramon.
-            </p>
+            <h2 className="text-4xl md:text-5xl font-serif text-purple-900 mb-4">{galleryTitle}</h2>
+            <p className="text-ink/60 font-light max-w-xl mx-auto">{galleryDescription}</p>
           </Reveal>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-            {galleryImages.map((img) => (
+            {gallery.map((img, index) => (
               <Reveal
-                key={img.src}
-                delay={img.delay}
-                className={`img-hover-container relative bg-stone-100 ${img.className}`}
+                key={img.id}
+                delay={galleryDelays[index % galleryDelays.length]}
+                className={`img-hover-container relative bg-stone-100 ${galleryClassNames[img.size] || galleryClassNames.normal}`}
               >
                 <Image
                   src={img.src}
@@ -386,7 +515,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 text-purple-900 border-b border-purple-900 pb-1 hover:text-rose-400 hover:border-rose-400 transition-colors"
             >
               <InstagramLogo size={22} />
-              <span className="font-medium">Kövess @tdorinaa néven</span>
+              <span className="font-medium">{galleryCtaText}</span>
             </a>
           </Reveal>
         </div>
@@ -400,35 +529,28 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
             <Reveal className="lg:col-span-5">
               <h2 className="text-4xl md:text-5xl font-serif mb-6 leading-tight">
-                Jelentkezz be <br />
-                <span className="text-rose-400 italic">online</span>
+                {bookingTitleLine1} <br />
+                <span className="text-rose-400 italic">{bookingTitleHighlight}</span>
               </h2>
-              <p className="text-stone-100/70 font-light text-lg mb-8">
-                Felejtsd el a hosszadalmas Messenger üzenetváltásokat. Töltsd ki az űrlapot, és
-                hamarosan felhívlak, hogy fixáljuk a pontos időpontot.
-              </p>
+              <p className="text-stone-100/70 font-light text-lg mb-8">{bookingDescription}</p>
 
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 bg-white/10 p-2 rounded-full text-rose-400">
-                    <Clock size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-lg mb-1">Rugalmas Időpontok</h4>
-                    <p className="text-sm text-stone-100/50">Próbálok alkalmazkodni az időbeosztásodhoz.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 bg-white/10 p-2 rounded-full text-rose-400">
-                    <ChatCircleText size={20} weight="fill" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-lg mb-1">Ingyenes Konzultáció</h4>
-                    <p className="text-sm text-stone-100/50">
-                      Minden nagyobb átalakítás előtt megbeszéljük, mi állna a legjobban.
-                    </p>
-                  </div>
-                </div>
+                {bookingFeatures.map((feature, index) => {
+                  const Icon = bookingIcons[feature.icon || 'clock'] || Clock
+                  return (
+                    <div key={feature.id || index} className="flex items-start gap-4">
+                      <div className="mt-1 bg-white/10 p-2 rounded-full text-rose-400">
+                        <Icon size={20} weight="fill" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-lg mb-1">{feature.title}</h4>
+                        {feature.description && (
+                          <p className="text-sm text-stone-100/50">{feature.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </Reveal>
 
@@ -444,7 +566,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-0">
             <Reveal className="lg:pr-16 flex flex-col justify-center">
-              <h2 className="text-4xl font-serif text-purple-900 mb-10">Látogass el hozzám.</h2>
+              <h2 className="text-4xl font-serif text-purple-900 mb-10">{contactTitle}</h2>
 
               <div className="space-y-8">
                 <div>
@@ -453,9 +575,9 @@ export default async function HomePage() {
                   </span>
                   <p className="text-xl font-serif text-ink">
                     {address}
-                    <span className="text-lg font-sans font-light mt-1 block">
-                      (Pontos cím bejelentkezés alapján)
-                    </span>
+                    {addressNote && (
+                      <span className="text-lg font-sans font-light mt-1 block">{addressNote}</span>
+                    )}
                   </p>
                 </div>
 
@@ -486,14 +608,16 @@ export default async function HomePage() {
                     >
                       <InstagramLogo size={18} weight="fill" />
                     </a>
-                    <a
-                      href="https://www.tiktok.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 border border-ink/10 flex items-center justify-center text-ink hover:bg-purple-900 hover:text-white hover:border-purple-900 transition-all"
-                    >
-                      <TiktokLogo size={18} weight="fill" />
-                    </a>
+                    {tiktok && (
+                      <a
+                        href={tiktok}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-10 h-10 border border-ink/10 flex items-center justify-center text-ink hover:bg-purple-900 hover:text-white hover:border-purple-900 transition-all"
+                      >
+                        <TiktokLogo size={18} weight="fill" />
+                      </a>
+                    )}
                   </div>
                 </div>
 
@@ -502,8 +626,8 @@ export default async function HomePage() {
                     Nyitvatartás
                   </span>
                   <ul className="text-ink/70 font-light space-y-1">
-                    {openingHours.map((row) => (
-                      <li key={row.day} className="flex justify-between max-w-xs gap-4">
+                    {openingHours.map((row, index) => (
+                      <li key={row.id || index} className="flex justify-between max-w-xs gap-4">
                         <span>{row.day}:</span> <span>{row.hours}</span>
                       </li>
                     ))}
@@ -514,7 +638,7 @@ export default async function HomePage() {
 
             <Reveal delay={200} className="h-96 lg:h-[600px] w-full bg-stone-100 overflow-hidden relative group">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2685.2534578135896!2d20.7818!3d48.1035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47409e6fcf2d9c0b%3A0x6ec0c5b550275815!2sMiskolc%2C%20Sz%C3%A9chenyi%20Istv%C3%A1n%20%C3%BAt!5e0!3m2!1shu!2shu!4v1700000000000!5m2!1shu!2shu"
+                src={mapEmbedUrl}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -537,13 +661,13 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
             <p className="font-serif text-2xl text-white mb-1">Dorina Fodrász</p>
-            <p className="text-stone-100/40 text-sm font-light">Miskolc — Széchenyi u. környéke</p>
+            <p className="text-stone-100/40 text-sm font-light">{footerTagline}</p>
           </div>
 
           <div className="text-stone-100/40 text-xs font-light text-center">
-            &copy; 2026 Dorina Fodrász. Minden jog fenntartva.
+            {footerCopyright}
             <br />
-            <span className="opacity-50 mt-1 block">Az árak tájékoztató jellegűek.</span>
+            <span className="opacity-50 mt-1 block">{footerDisclaimer}</span>
           </div>
 
           <a
